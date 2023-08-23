@@ -1,6 +1,6 @@
 # Direct LiDAR-Inertial Odometry: Lightweight LIO with Continuous-Time Motion Correction
 
-#### [[Paper](https://arxiv.org/abs/2203.03749)] [[Video](https://www.youtube.com/watch?v=4-oXjG8ow10)] [[Presentation](https://www.youtube.com/watch?v=Hmiw66KZ1tU)]
+#### [[ IEEE ICRA ](https://ieeexplore.ieee.org/document/10160508)] [[ arXiv ](https://arxiv.org/abs/2203.03749)] [[ Video ](https://www.youtube.com/watch?v=4-oXjG8ow10)] [[ Presentation ](https://www.youtube.com/watch?v=Hmiw66KZ1tU)]
 
 DLIO is a new lightweight LiDAR-inertial odometry algorithm with a novel coarse-to-fine approach in constructing continuous-time trajectories for precise motion correction. It features several algorithmic improvements over its predecessor, [DLO](https://github.com/vectr-ucla/direct_lidar_odometry), and was presented at the IEEE International Conference on Robotics and Automation (ICRA) in London, UK in 2023.
 
@@ -11,8 +11,8 @@ DLIO is a new lightweight LiDAR-inertial odometry algorithm with a novel coarse-
 
 ## Instructions
 
-### Sensor Setup
-DLIO has been extensively tested using a variety of sensor configurations and currently supports Ouster, Velodyne, and Hesai LiDARs. The point cloud should be of input type `sensor_msgs::PointCloud2` and the 6-axis IMU input type of `sensor_msgs::Imu`.
+### Sensor Setup & Compatibility
+DLIO has been extensively tested using a variety of sensor configurations and currently supports Ouster, Velodyne, Hesai, and Livox LiDARs. The point cloud should be of input type `sensor_msgs::PointCloud2` and the 6-axis IMU input type of `sensor_msgs::Imu`. For Livox sensors specifically, please use the `feature/livox-support` branch and the latest [`livox_ros_driver2`](https://github.com/Livox-SDK/livox_ros_driver2) package with `xfer_format: 1` and point cloud of input type `livox_ros_driver2::CustomMsg` (see [here](https://github.com/vectr-ucla/direct_lidar_inertial_odometry/issues/5) for more information).
 
 For best performance, extrinsic calibration between the LiDAR/IMU sensors and the robot's center-of-gravity should be inputted into `cfg/dlio.yaml`. If the exact values of these are unavailable, a rough LiDAR-to-IMU extrinsics can also be used (note however that performance will be degraded).
 
@@ -35,7 +35,7 @@ The following has been verified to be compatible, although other configurations 
 sudo apt install libomp-dev libpcl-dev libeigen3-dev
 ```
 
-DLIO currently only supports ROS1, but we welcome any contributions by the community to add ROS2 support!
+DLIO supports ROS1 by default, and ROS2 using the `feature/ros2` branch.
 
 ### Compiling
 Compile using the [`catkin_tools`](https://catkin-tools.readthedocs.io/en/latest/) package via:
@@ -56,6 +56,17 @@ roslaunch direct_lidar_inertial_odometry dlio.launch \
   imu_topic:=/robot/imu
 ```
 
+for Ouster, Velodyne, or Hesai sensors, or 
+
+```sh
+roslaunch direct_lidar_inertial_odometry dlio.launch \
+  rviz:={true, false} \
+  livox_topic:=/livox/lidar \
+  imu_topic:=/robot/imu
+```
+
+for Livox sensors.
+
 Be sure to change the topic names to your corresponding topics. Alternatively, edit the launch file directly if desired. If successful, you should see the following output in your terminal:
 <br>
 <p align='center'>
@@ -70,7 +81,7 @@ rosservice call /robot/dlio_map/save_pcd LEAF_SIZE SAVE_PATH
 ```
 
 ### Test Data
-For your convenience, we provide test data [here](https://drive.google.com/file/d/1Sp_Mph4rekXKY2euxYxv6SD6WIzB-wVU/view?usp=sharing) (1.2GB, 1m 13s) of an aggressive motion to test our motion correction scheme. Try this data with both deskewing on and off!
+For your convenience, we provide test data [here](https://drive.google.com/file/d/1Sp_Mph4rekXKY2euxYxv6SD6WIzB-wVU/view?usp=sharing) (1.2GB, 1m 13s, Ouster OS1-32) of an aggressive motion to test our motion correction scheme, and [here](https://drive.google.com/file/d/1HbmF5gTHxCAMqBkEd5PTxDNQvcI8tKXn/view?usp=sharing) (16.5GB, 4m 21s, Ouster OSDome) of a longer trajectory outside with lots of trees. Try these two datasets with both deskewing on and off!
 
 <br>
 <p align='center'>
@@ -84,8 +95,10 @@ If you found this work useful, please cite our manuscript:
 @article{chen2022dlio,
   title={Direct LiDAR-Inertial Odometry: Lightweight LIO with Continuous-Time Motion Correction},
   author={Chen, Kenny and Nemiroff, Ryan and Lopez, Brett T},
-  journal={IEEE International Conference on Robotics and Automation (ICRA)},
-  year={2023}
+  journal={2023 IEEE International Conference on Robotics and Automation (ICRA)},
+  year={2023},
+  pages={3983-3989},
+  doi={10.1109/ICRA48891.2023.10160508}
 }
 ```
 
@@ -98,10 +111,15 @@ We thank the authors of the [FastGICP](https://github.com/SMRT-AIST/fast_gicp) a
 
 We would also like to thank Helene Levy and David Thorne for their help with data collection.
 
+Many thanks to [@shrijitsingh99](https://github.com/shrijitsingh99) for [porting DLIO to ROS2](https://github.com/vectr-ucla/direct_lidar_inertial_odometry/pull/16)!
+
 ## License
 This work is licensed under the terms of the MIT license.
 
 <br>
 <p align='center'>
     <img src="./doc/img/ucla.png" alt="drawing" width="720"/>
+</p>
+<p align='center'>
+    <img src="./doc/img/trees.png" alt="drawing" width="720"/>
 </p>

@@ -950,8 +950,8 @@ void dlio::OdomNode::callbackImu(const sensor_msgs::Imu::ConstPtr& imu_raw) {
   } else {
 
     double dt = imu->header.stamp.toSec() - this->prev_imu_stamp;
+    if (dt == 0) { dt = 1.0/200.0; }
     this->imu_rates.push_back( 1./dt );
-    if (dt == 0) { return; }
 
     // Apply the calibrated bias to the new IMU measurements
     this->imu_meas.stamp = imu->header.stamp.toSec();
@@ -1571,21 +1571,16 @@ void dlio::OdomNode::updateKeyframes() {
   // update keyframes
   bool newKeyframe = false;
 
-  // spaciousness keyframing
   if (abs(dd) > this->keyframe_thresh_dist_ || abs(theta_deg) > this->keyframe_thresh_rot_) {
     newKeyframe = true;
   }
 
-  // rotational exploration keyframing
-  if (abs(dd) <= this->keyframe_thresh_dist_ && abs(theta_deg) > this->keyframe_thresh_rot_ && num_nearby <= 1) {
-    newKeyframe = true;
-  }
-
-  // check for nearby keyframes
   if (abs(dd) <= this->keyframe_thresh_dist_) {
     newKeyframe = false;
-  } else if (abs(dd) <= 0.5) {
-    newKeyframe = false;
+  }
+
+  if (abs(dd) <= this->keyframe_thresh_dist_ && abs(theta_deg) > this->keyframe_thresh_rot_ && num_nearby <= 1) {
+    newKeyframe = true;
   }
 
   if (newKeyframe) {
@@ -1701,14 +1696,13 @@ void dlio::OdomNode::buildSubmap(State vehicle_state) {
   // get indices for top kNN for concave hull
   this->pushSubmapIndices(concave_ds, this->submap_kcc_, this->keyframe_concave);
 
-  // concatenate all submap clouds and normals
-  std::sort(this->submap_kf_idx_curr.begin(), this->submap_kf_idx_curr.end());
-  auto last = std::unique(this->submap_kf_idx_curr.begin(), this->submap_kf_idx_curr.end());
-  this->submap_kf_idx_curr.erase(last, this->submap_kf_idx_curr.end());
-
   // sort current and previous submap kf list of indices
   std::sort(this->submap_kf_idx_curr.begin(), this->submap_kf_idx_curr.end());
   std::sort(this->submap_kf_idx_prev.begin(), this->submap_kf_idx_prev.end());
+  
+  // remove duplicate indices
+  auto last = std::unique(this->submap_kf_idx_curr.begin(), this->submap_kf_idx_curr.end());
+  this->submap_kf_idx_curr.erase(last, this->submap_kf_idx_curr.end());
 
   // check if submap has changed from previous iteration
   if (this->submap_kf_idx_curr != this->submap_kf_idx_prev){
